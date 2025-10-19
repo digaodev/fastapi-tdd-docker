@@ -1,0 +1,13 @@
+services:
+  api:
+    # Development profile: hot reload, bind-mounted source
+    profiles: ["dev"]
+    build:
+      context: .
+    image: fastapi-tdd-docker:dev
+    command: uvicorn fastapi_tdd_docker.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    env_file: .env # uses project root .env
+    volumes:
+      - ./src:/app/src:delegated # performant live code reload - host writes take priority, container updates may be delayed

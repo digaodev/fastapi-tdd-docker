@@ -1,0 +1,111 @@
+# ----------------------------
+
+# Python cache & artifacts
+
+# ----------------------------
+
+**pycache**/
+_.pyc
+_.pyo
+_.pyd
+_.pdb
+_.egg-info/
+_.egg
+\*.log
+
+# ----------------------------
+
+# Environment & virtualenvs
+
+# ----------------------------
+
+.venv/
+.env
+env/
+venv/
+_.env._ # e.g. .env.dev, .env.local
+
+# ----------------------------
+
+# Testing & coverage
+
+# ----------------------------
+
+htmlcov/
+.tox/
+.nox/
+.coverage
+coverage.xml
+pytest_cache/
+
+# ----------------------------
+
+# Build system artifacts
+
+# ----------------------------
+
+build/
+dist/
+pip-wheel-metadata/
+
+# ----------------------------
+
+# Version control / editor junk
+
+# ----------------------------
+
+.git/
+.gitignore
+.gitattributes
+.vscode/
+.idea/
+_.swp
+_.swo
+.DS_Store
+Thumbs.db
+
+# ----------------------------
+
+# Container / dependency managers
+
+# ----------------------------
+
+# uv cache
+
+.uv_cache/
+
+# Poetry cache (if used later)
+
+.poetry/
+
+# PDM cache
+
+.pdm-python/
+
+# pipenv
+
+Pipfile.lock
+Pipfile
+
+# ----------------------------
+
+# Docker & Compose intermediates
+
+# ----------------------------
+
+docker-compose.override.yml
+Dockerfile.dev
+Dockerfile.local
+
+# ----------------------------
+
+# Project-specific ignores
+
+# ----------------------------
+
+# Local data / logs
+
+_.db
+_.sqlite3
+logs/
+tmp/
