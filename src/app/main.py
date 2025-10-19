@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI
 
-from fastapi_tdd_docker.config import Settings, get_settings
+from app.config import Settings, get_settings
 
 app = FastAPI()
 

@@ -67,4 +67,4 @@ HEALTHCHECK --interval=30s --timeout=3s \
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
 # Start Uvicorn (swap to gunicorn for heavy prod setups)
-CMD ["uvicorn", "fastapi_tdd_docker.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
