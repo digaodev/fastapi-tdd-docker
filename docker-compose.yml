@@ -5,9 +5,37 @@ services:
     build:
       context: .
     image: fastapi-tdd-docker:dev
-    command: uvicorn fastapi_tdd_docker.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn fastapi-tdd-docker.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
     env_file: .env # uses project root .env
     volumes:
       - ./src:/app/src:delegated # performant live code reload - host writes take priority, container updates may be delayed
+    depends_on:
+      db:
+        condition: service_healthy # wait for db to be healthy (no custom entrypoint)
+
+db:
+  image: postgres:17-alpine
+  environment:
+    POSTGRES_USER: ${POSTGRES_USER:-postgres}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    POSTGRES_DB: ${POSTGRES_DB:-web_dev}
+  volumes:
+    - pgdata:/var/lib/postgresql/data
+    - ./db/init:/docker-entrypoint-initdb.d:ro
+  healthcheck:
+    test:
+      [
+        "CMD-SHELL",
+        "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h 127.0.0.1 -p 5432",
+      ]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 10s
+  ports:
+    - "5432:5432" # optional; only if you want psql from host
+
+volumes:
+  pgdata:
