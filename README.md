@@ -51,6 +51,25 @@ docker compose up -d db
 uv run uvicorn fastapi_tdd_docker.main:app --reload
 ```
 
+### Code Quality
+
+```bash
+# Install dev dependencies
+uv sync --all-extras
+
+# Run linter
+uv run ruff check .
+
+# Format code
+uv run ruff format .
+
+# Type checking
+uv run mypy src
+
+# Run tests (when available)
+uv run pytest
+```
+
 ### Database Migrations
 
 #### Option A: Local Migrations (Fast Development)
