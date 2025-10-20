@@ -38,8 +38,10 @@ RUN uv sync --frozen --no-dev --python /usr/local/bin/python
 ############################################
 FROM python:3.13-slim AS runtime
 
-# Add tini for proper PID 1 signal handling
-RUN apt-get update && apt-get install -y --no-install-recommends tini \
+# Add tini for proper PID 1 signal handling and curl for healthcheck
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tini \
+    curl \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -67,4 +69,4 @@ HEALTHCHECK --interval=30s --timeout=3s \
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
 # Start Uvicorn (swap to gunicorn for heavy prod setups)
-CMD ["uvicorn", "fastapi-tdd-docker.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "fastapi_tdd_docker.main:app", "--host", "0.0.0.0", "--port", "8000"]
