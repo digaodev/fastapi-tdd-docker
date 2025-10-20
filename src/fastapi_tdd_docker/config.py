@@ -1,7 +1,7 @@
 import logging
 from functools import lru_cache
 
-from pydantic import PostgresDsn
+from pydantic import AliasChoices, AnyUrl, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 log = logging.getLogger('uvicorn')
@@ -10,10 +10,22 @@ log = logging.getLogger('uvicorn')
 class Settings(BaseSettings):
     environment: str = 'dev'
     testing: bool = False
-    database_url: PostgresDsn | None = None
-    database_test_url: PostgresDsn | None = None
 
-    model_config = SettingsConfigDict(env_file='.env')
+    # Accept either APP_DATABASE_URL or DATABASE_URL (common in platforms)
+    database_url: AnyUrl | None = Field(
+        default=None,
+        validation_alias=AliasChoices('APP_DATABASE_URL', 'DATABASE_URL'),
+    )
+    database_test_url: AnyUrl | None = Field(
+        default=None,
+        validation_alias=AliasChoices('APP_DATABASE_TEST_URL', 'DATABASE_TEST_URL'),
+    )
+
+    model_config = SettingsConfigDict(
+        env_file='.env',
+        env_prefix='APP_',  # all app vars should start with APP_
+        extra='ignore',  # ignore non-app vars (e.g., POSTGRES_* for Docker)
+    )
 
 
 @lru_cache
