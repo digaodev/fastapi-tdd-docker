@@ -20,15 +20,15 @@ docker compose --profile dev up --build
 
 ### Database Migrations
 
+**Local (fast iteration):**
 ```bash
-# Create a new migration after modifying models
-alembic revision --autogenerate -m "description"
+uv run alembic revision --autogenerate -m "description"
+uv run alembic upgrade head
+```
 
-# Apply migrations
-alembic upgrade head
-
-# Rollback one migration
-alembic downgrade -1
+**Docker (production-like):**
+```bash
+docker compose run --rm migrate
 ```
 
 ### Package Management
@@ -57,6 +57,7 @@ uv add --dev package-name
 - **Settings**: Uses `pydantic-settings` with `BaseSettings` in `config.py`. Settings are loaded from `.env` file and cached with `@lru_cache`.
 - **Dependency Injection**: Settings are injected via FastAPI's Depends system using the `SettingsDep` type alias: `Annotated[Settings, Depends(get_settings)]`.
 - **Database URLs**: Supports separate URLs for development (`database_url`) and testing (`database_test_url`).
+- **Environment Variables**: `.env` uses `localhost` for local development. When running via docker-compose, the URLs are automatically overridden to use `db` (the Docker service name) via the `environment` section in docker-compose.yml.
 
 ### Alembic Integration
 

@@ -23,7 +23,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # Copy only project metadata to leverage Docker layer cache
-COPY pyproject.toml uv.lock README.md .env ./
+COPY pyproject.toml uv.lock README.md ./
 
 # Create the virtualenv and install ONLY third-party deps (no project yet)
 # --frozen guarantees the lock is respected

@@ -8,12 +8,33 @@ services:
     command: uvicorn fastapi-tdd-docker.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
       - "8000:8000"
-    env_file: .env # uses project root .env
+    env_file: .env # Load base config from .env
+    environment:
+      # Override database URLs for Docker networking (use 'db' instead of 'localhost')
+      APP_DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/web_dev
+      APP_DATABASE_TEST_URL: postgresql+asyncpg://postgres:postgres@db:5432/web_test
     volumes:
       - ./src:/app/src:delegated # performant live code reload - host writes take priority, container updates may be delayed
     depends_on:
       db:
         condition: service_healthy # wait for db to be healthy (no custom entrypoint)
+
+  # Migration service - run migrations in Docker
+  # Usage: docker compose run --rm migrate
+  migrate:
+    build:
+      context: .
+    image: fastapi-tdd-docker:dev
+    command: alembic upgrade head
+    env_file: .env
+    environment:
+      APP_DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/web_dev
+      APP_DATABASE_TEST_URL: postgresql+asyncpg://postgres:postgres@db:5432/web_test
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - tools # Only run when explicitly called
 
   db:
     image: postgres:17-alpine
