@@ -8,7 +8,7 @@ settings = get_settings()
 
 
 def setup_logging() -> None:
-    """Configure structured logging for the application."""
+    """Configure structured logging for the whole application."""
     log_level = logging.DEBUG if settings.environment == "dev" else logging.INFO
 
     # Configure root logger

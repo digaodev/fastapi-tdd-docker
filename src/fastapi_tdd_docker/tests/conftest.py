@@ -1,9 +1,8 @@
-# tests/conftest.py
 import pytest
 from fastapi.testclient import TestClient
 
 from fastapi_tdd_docker.config import Settings, get_settings
-from fastapi_tdd_docker.main import app
+from fastapi_tdd_docker.main import create_app
 
 
 def get_settings_override() -> Settings:
@@ -18,9 +17,11 @@ def get_settings_override() -> Settings:
 
 @pytest.fixture(scope="module")
 def client():
+    app = create_app()
     # setup: override DI once for the module
     app.dependency_overrides[get_settings] = get_settings_override
     with TestClient(app) as c:
         yield c
+
     # teardown: clear overrides
     app.dependency_overrides.clear()
