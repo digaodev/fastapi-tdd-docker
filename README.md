@@ -13,6 +13,23 @@ This project implements a FastAPI application using Test-Driven Development prin
 - Docker and Docker Compose
 - Python 3.13+ (for local development)
 - uv package manager
+- Make (optional, for convenience commands)
+
+### Quick Start with Make
+
+```bash
+# View all available commands
+make help
+
+# Start development environment
+make dev
+
+# Run tests
+make test
+
+# Check code quality
+make check
+```
 
 ### Setup
 
