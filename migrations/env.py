@@ -1,11 +1,12 @@
+import os
 from logging.config import fileConfig
 
 from alembic import context
 from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import create_async_engine
 
-from fastapi_tdd_docker.db import engine  # AsyncEngine used by the app
-from fastapi_tdd_docker.models import SQLModel  # SQLModel.metadata has all tables
+# Import models package to ensure all SQLModel tables are registered
+from fastapi_tdd_docker.models import SQLModel
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -18,10 +19,21 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
 # Importing the models package ensures all SQLModel tables are registered
 target_metadata = SQLModel.metadata
+
+
+def get_url() -> str:
+    """
+    Get database URL from environment or alembic.ini.
+    Priority: APP_DATABASE_URL > DATABASE_URL > alembic.ini
+    """
+    url = os.getenv("APP_DATABASE_URL") or os.getenv("DATABASE_URL")
+    if url:
+        return url
+    # Fallback to alembic.ini
+    return config.get_main_option("sqlalchemy.url", "")
+
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -42,10 +54,10 @@ def run_migrations_offline() -> None:
     script output.
 
     Run migrations without a DB connection.
-    Generates SQL scripts using the URL from alembic.ini.
+    Generates SQL scripts using the URL from env or alembic.ini.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = get_url()
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -112,12 +124,16 @@ def _run_migrations(connection: Connection) -> None:
 
 async def run_migrations_online() -> None:
     """
-    Run migrations with a real DB connection using the app's AsyncEngine.
-    Uses the same engine/URL the app runs with (single source of truth).
+    Run migrations with a real DB connection.
+    Creates its own AsyncEngine from environment variables or alembic.ini.
+    This decouples Alembic from the app's engine lifecycle.
     """
-    assert isinstance(engine, AsyncEngine)
+    url = get_url()
+    engine = create_async_engine(url, echo=False)
+
     async with engine.connect() as conn:
         await conn.run_sync(_run_migrations)
+
     await engine.dispose()
 
 

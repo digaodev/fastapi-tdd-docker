@@ -4,9 +4,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from fastapi_tdd_docker.api import healthcheck, ping
+from fastapi_tdd_docker.api import healthcheck, ping, summaries
 from fastapi_tdd_docker.config import get_settings
-from fastapi_tdd_docker.db import engine  # reuse the app's AsyncEngine
+from fastapi_tdd_docker.db import get_engine
 from fastapi_tdd_docker.logging_config import log_message, setup_logging
 
 # Setup logging (global configuration, only done once in main.py)
@@ -25,7 +25,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     )
     yield
     # shutdown actions (after the app stops)
-    # Clean shutdown for the engine
+    # Clean shutdown for the engine (if it was created)
+    engine = get_engine()
     await engine.dispose()
 
 
@@ -42,6 +43,7 @@ def create_app() -> FastAPI:
 
     app.include_router(ping.router)
     app.include_router(healthcheck.router)
+    app.include_router(summaries.router, prefix="/summaries", tags=["summaries"])
 
     return app
 
