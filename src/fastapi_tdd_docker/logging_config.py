@@ -4,11 +4,10 @@ from typing import Any
 
 from .config import get_settings
 
-settings = get_settings()
-
 
 def setup_logging() -> None:
     """Configure structured logging for the whole application."""
+    settings = get_settings()  # Get settings when function is called
     log_level = logging.DEBUG if settings.environment == "dev" else logging.INFO
 
     # Configure root logger
