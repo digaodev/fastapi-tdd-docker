@@ -1,0 +1,50 @@
+# Pre-commit hooks - automatic validation on git commit
+#
+# Setup: make setup-hooks (or: uv pip install pre-commit && uv run pre-commit install)
+# Test manually: uv run pre-commit run --all-files
+#
+# What runs on commit:
+# ✅ Ruff linting + auto-fix
+# ✅ Ruff formatting
+# ✅ MyPy type checking
+# ✅ File checks (trailing whitespace, YAML validation, etc.)
+# ❌ Pytest (too slow, requires DB - use 'make validate' instead)
+
+repos:
+  # Ruff - Fast Python linter (replaces flake8, isort, etc.)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.0
+    hooks:
+      # Linter
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      # Formatter
+      - id: ruff-format
+
+  # Mypy - Type checking (using local hook for uv compatibility)
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: uv run mypy src
+        language: system
+        types: [python]
+        pass_filenames: false
+
+  # Basic checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: debug-statements
+        language_version: python3.13
+
+  # Note: pytest is intentionally NOT included in pre-commit hooks
+  # - Requires database to be running
+  # - Makes commits too slow
+  # - Run manually with: make validate or make test

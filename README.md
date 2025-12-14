@@ -21,14 +21,18 @@ This project implements a FastAPI application using Test-Driven Development prin
 # View all available commands
 make help
 
-# Start development environment
-make dev
+# Initial setup
+make install        # Install dependencies
+make setup-hooks    # Setup pre-commit hooks
 
-# Run tests
-make test
+# Development
+make dev            # Start development environment (Docker)
 
-# Check code quality
-make check
+# Code quality (use these frequently!)
+make fix            # Auto-fix linting + format code
+make test           # Run tests
+make validate       # Run all validations (imports + lint + type + test)
+make check          # Run lint + type + test
 ```
 
 ### Setup
@@ -36,12 +40,15 @@ make check
 1. **Clone the repository**
 
 2. **Create your environment file**
+
    ```bash
    cp .env.example .env
    ```
+
    The `.env` file is already configured for local development (uses `localhost`). When running via docker-compose, database URLs are automatically overridden to use Docker networking.
 
 3. **Start the database**
+
    ```bash
    docker compose up -d db
    ```
@@ -54,12 +61,15 @@ make check
 ### Running the Application
 
 #### Option 1: Docker Development (Recommended)
+
 ```bash
 docker compose --profile dev up --build
 ```
+
 Access the API at http://localhost:8000
 
 #### Option 2: Local Development
+
 ```bash
 # Ensure database is running
 docker compose up -d db
@@ -90,6 +100,7 @@ uv run pytest
 ### Database Migrations
 
 #### Option A: Local Migrations (Fast Development)
+
 ```bash
 # Ensure database is running
 docker compose up -d db
@@ -105,6 +116,7 @@ uv run alembic downgrade -1
 ```
 
 #### Option B: Docker Migrations (Production-like)
+
 ```bash
 # Run migrations in container
 docker compose run --rm migrate
@@ -122,6 +134,7 @@ docker compose run --rm migrate  # then apply with Docker
 ## Environment Variables
 
 The project uses a smart environment variable setup:
+
 - **Local development**: `.env` uses `localhost` for database connections
 - **Docker development**: docker-compose automatically overrides to use `db` hostname
 - **No manual switching required**

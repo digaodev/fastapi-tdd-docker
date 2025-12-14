@@ -1,4 +1,4 @@
-.PHONY: help dev down logs shell db-shell migrate migrate-create test lint format type-check clean install
+.PHONY: help dev down logs shell db-shell migrate migrate-create test lint format fix type-check validate setup-hooks check clean install
 
 # Default target when you just run 'make'
 help:
@@ -19,8 +19,11 @@ help:
 	@echo "    make test             - Run tests with coverage"
 	@echo "    make lint             - Run linter (ruff)"
 	@echo "    make format           - Format code (ruff)"
+	@echo "    make fix              - Auto-fix linting + format code"
 	@echo "    make type-check       - Run type checker (mypy)"
+	@echo "    make validate         - Run ALL validations (imports + lint + type + test)"
 	@echo "    make check            - Run all checks (lint + type + test)"
+	@echo "    make setup-hooks      - Install pre-commit hooks"
 	@echo ""
 	@echo "  Utilities:"
 	@echo "    make install          - Install dependencies"
@@ -71,11 +74,28 @@ lint:
 format:
 	uv run ruff format src
 
+fix:
+	@echo "🔧 Auto-fixing linting issues..."
+	uv run ruff check --fix src
+	@echo "✨ Formatting code..."
+	uv run ruff format src
+	@echo "✅ All fixes applied!"
+
 type-check:
 	uv run mypy src
 
+validate:
+	@bash scripts/validate.sh
+
 check: lint type-check test
 	@echo "✅ All checks passed!"
+
+setup-hooks:
+	@echo "📦 Installing pre-commit..."
+	uv pip install pre-commit
+	@echo "🔧 Setting up git hooks..."
+	uv run pre-commit install
+	@echo "✅ Pre-commit hooks installed! Commits will now be validated automatically."
 
 # Utilities
 install:

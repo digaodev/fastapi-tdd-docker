@@ -25,6 +25,7 @@ dev = [
     "httpx>=0.28.0",
     "ruff>=0.8.0",
     "mypy>=1.13.0",
+    "pre-commit>=4.0.0",
 ]
 
 [project.scripts]
@@ -70,6 +71,11 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "*.tests.*"
 disallow_untyped_defs = false
+
+[[tool.mypy.overrides]]
+module = "*.api.crud"
+# SQLModel/SQLAlchemy comparisons are correctly typed but strict mypy has issues
+disable_error_code = ["arg-type"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

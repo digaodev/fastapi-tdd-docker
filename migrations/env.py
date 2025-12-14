@@ -1,10 +1,11 @@
 from logging.config import fileConfig
 
 from alembic import context
-from fastapi_tdd_docker.db import engine  # AsyncEngine used by the app
-from fastapi_tdd_docker.models import SQLModel  # SQLModel.metadata has all tables
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import AsyncEngine
+
+from fastapi_tdd_docker.db import engine  # AsyncEngine used by the app
+from fastapi_tdd_docker.models import SQLModel  # SQLModel.metadata has all tables
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -44,12 +45,12 @@ def run_migrations_offline() -> None:
     Generates SQL scripts using the URL from alembic.ini.
 
     """
-    url = config.get_main_option('sqlalchemy.url')
+    url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
-        dialect_opts={'paramstyle': 'named'},
+        dialect_opts={"paramstyle": "named"},
         include_schemas=False,
     )
 

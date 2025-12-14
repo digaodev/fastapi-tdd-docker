@@ -27,3 +27,12 @@ dmypy.json
 
 # Ruff
 .ruff_cache/
+
+# IDE (keep settings.json and extensions.json for consistency)
+.vscode/*.code-workspace
+.vscode/.ropeproject
+.idea/
+
+# macOS
+.DS_Store
+*/.DS_Store
