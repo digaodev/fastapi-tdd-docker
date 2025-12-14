@@ -1,0 +1,110 @@
+You are working on this repository:
+
+- Python package: src/fastapi_tdd_docker/
+- Stack: FastAPI, SQLModel (async via SQLAlchemy 2.0), asyncpg, Alembic, Docker/Compose, pytest
+- Tooling: uv (pyproject.toml), Ruff only (lint + format), Pylance strict, mypy strict
+
+PRIMARY GOALS
+
+- Keep the project production-grade: clean architecture, minimal side effects, predictable DI, strict typing.
+- Work step-by-step: propose the smallest change that moves us forward and can be verified.
+- Never invent APIs/flags/paths. If uncertain, ask for the exact file/output.
+
+NON-NEGOTIABLE TECH RULES
+
+1. Python imports MUST use underscores, never hyphens:
+   ✅ fastapi_tdd_docker
+   ❌ fastapi-tdd-docker
+
+2. Async DB only:
+
+   - Use SQLAlchemy 2.0 async patterns only (AsyncEngine/AsyncSession, async_sessionmaker).
+   - Never suggest synchronous Session/engine with asyncpg.
+
+3. Alembic is the schema source of truth:
+
+   - Do NOT suggest creating tables at runtime (no create_all in app startup).
+   - Use Alembic migrations from day 1.
+
+4. Avoid import-time side effects:
+
+   - Do NOT call get_settings() at module import time in db.py, env.py, or models.
+   - Do NOT create engine from env at import time if Alembic/pytest CLI will import it.
+   - Prefer lazy factories: get_engine(), get_sessionmaker(), get_settings() are called at runtime.
+   - Migrations env.py must be runnable with only alembic.ini / environment variables available.
+
+5. Keep request/response schemas separate from DB models:
+
+   - SQLModel table models live in fastapi_tdd_docker/models/\*.py
+   - API schemas (Pydantic) live in fastapi_tdd_docker/models/schemas.py (or a dedicated schemas module)
+   - Do not reuse DB models as response models unless explicitly requested.
+
+6. Strict typing compatibility:
+
+   - Assume Pylance is in strict mode; code must type-check without “Any” leaks.
+   - Public functions must have explicit return types.
+   - FastAPI dependencies should use Annotated[...] for clarity when helpful.
+
+DEV WORKFLOW PREFERENCE
+
+- Dev: docker-compose profile "dev" with uvicorn --reload and bind-mounted ./src
+- Prod-like: no reload, no bind mount; migrations run as a separate tool service.
+
+COMMAND / OUTPUT STYLE (MUST FOLLOW)
+
+- Provide at most the next 1–3 steps in a sequence.
+- For every change: specify filename + exact code block or minimal diff.
+- After changes: include 1 verification command (e.g., ruff/mypy/pytest or alembic check).
+- If advice depends on versions, say what is assumed and how to verify locally.
+
+PROJECT-SPECIFIC CONSTRAINTS
+
+- Config:
+
+  - Settings are in fastapi_tdd_docker/config.py using pydantic-settings
+  - Allowed env vars:
+
+    - APP_DATABASE_URL / DATABASE_URL
+    - APP_DATABASE_TEST_URL / DATABASE_TEST_URL
+
+  - Settings must ignore non-app vars (POSTGRES\_\*) and not crash Alembic.
+
+- DB layer:
+
+  - Provide FastAPI dependency get_session() yielding AsyncSession
+  - Module-level AsyncEngine created at import (shared with Alembic)
+  - Engine created from settings but reused throughout app lifecycle
+
+TESTING RULES
+
+- Use pytest + TestClient for API integration tests
+- TestClient is synchronous but bridges to async app automatically
+- For database tests:
+  - Use psycopg2-binary for test schema management (DROP/CREATE tables)
+  - App still uses asyncpg via AsyncEngine during test execution
+  - This provides proper test isolation with fresh tables per test
+- Use dependency_overrides for settings in tests
+- Tests must be hermetic: do not depend on local machine state
+- Each test with database gets fresh tables (drop_all → create_all)
+
+DOCKER / COMPOSE RULES
+
+- Do not include compose "version:".
+- Prefer Postgres official image + init scripts mounted into /docker-entrypoint-initdb.d (read-only).
+- Use healthcheck + depends_on: condition: service_healthy (no netcat loops).
+- Keep secrets out of git; .env is local only.
+
+WHAT NOT TO DO (AUTO-REFUSE)
+
+- Renaming package structure, changing tools (uv→poetry), switching ORM, or “big refactors” unless explicitly asked.
+- Suggesting runtime schema creation as default.
+- Suggesting import paths with hyphens.
+- Adding extra dependencies to solve typing/lint unless strictly necessary and justified.
+
+IF YOU NEED MORE CONTEXT
+Ask for one of:
+
+- current docker-compose.yml, dockerfile
+- current alembic.ini
+- current test failure output
+- current ruff/mypy/pylance error message
