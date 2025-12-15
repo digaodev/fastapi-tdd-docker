@@ -4,12 +4,21 @@ This guide covers deploying the FastAPI TDD Docker application to modern platfor
 
 ---
 
+## 🎯 **Key Features**
+
+- ✅ **Auto-migrations on startup**: No manual migration steps required
+- ✅ **Multi-stage builds**: Optimized Docker images (~200MB)
+- ✅ **Free tier compatible**: Works without shell access or pre-deploy hooks
+- ✅ **Health checks**: Built-in `/ping` and `/health` endpoints
+
+---
+
 ## 📦 **Prerequisites**
 
 Before deploying, ensure:
 
 - ✅ All tests pass: `make validate`
-- ✅ Production Dockerfile builds: `docker build -f dockerfile.prod -t myapp .`
+- ✅ Production Dockerfile builds: `make build-prod`
 - ✅ Environment variables documented in `.env.example`
 
 ---
@@ -74,14 +83,15 @@ databases:
 # 1. Create Render account at https://render.com
 
 # 2. Connect GitHub repository
-# - Dashboard → New → Web Service
+# - Dashboard → New → Blueprint (recommended)
+# - Or: New → Web Service (manual setup)
 # - Connect your GitHub repo
 # - Render will auto-detect render.yaml
 
-# 3. Migrations (one-time setup)
-# - In Render dashboard, go to your web service
-# - Shell tab → Run command:
-uv run alembic upgrade head
+# 3. Migrations are automatic!
+# - Migrations run automatically on startup via dockerfile.prod
+# - No manual steps required (even on free tier)
+# - Check logs to verify: "Running upgrade -> 8c13d10608f1"
 
 # 4. Done! Your API is live at:
 # https://your-app-name.onrender.com/docs
@@ -94,6 +104,13 @@ APP_ENVIRONMENT=prod
 APP_DATABASE_URL=<from Render PostgreSQL>
 PORT=8000
 ```
+
+**Note on Free Tier**:
+
+- ⚠️ Shell access NOT available on free tier
+- ✅ Migrations run automatically on startup (no shell needed)
+- ⚠️ Service spins down after 15 minutes of inactivity
+- ⚠️ First request after spin-down takes ~30 seconds
 
 ---
 
@@ -129,11 +146,19 @@ railway variables set PORT=8000
 # 6. Deploy
 railway up
 
-# 7. Run migrations
-railway run uv run alembic upgrade head
+# 7. Migrations are automatic!
+# - Migrations run automatically on startup
+# - No manual command needed
 
 # 8. Get URL
 railway open
+```
+
+**Note**: Railway's free tier ($5 credit) includes shell access if you need it:
+
+```bash
+railway run bash
+uv run alembic current  # Check migration status
 ```
 
 **Pro tip**: Railway automatically sets `DATABASE_URL` when you add PostgreSQL!
@@ -206,8 +231,9 @@ fly postgres attach <postgres-app-name>
 # 6. Deploy
 fly deploy
 
-# 7. Run migrations
-fly ssh console -C "uv run alembic upgrade head"
+# 7. Migrations are automatic!
+# - Migrations run automatically on startup
+# - Or manually via: fly ssh console -C "uv run alembic upgrade head"
 
 # 8. Open app
 fly open
@@ -253,9 +279,10 @@ Before going live, ensure:
 
 ### **Database**
 
-- [ ] Migrations applied: `uv run alembic upgrade head`
+- [ ] Migrations run automatically on startup (check logs for confirmation)
 - [ ] Connection pooling configured (in `config.py`)
 - [ ] Backups enabled (platform-specific)
+- [ ] Can verify migration status via platform shell (if available)
 
 ### **Monitoring**
 

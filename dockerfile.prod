@@ -77,14 +77,15 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
 # Use tini as PID 1 for proper signal handling
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
-# Run Gunicorn with Uvicorn workers
+# Run migrations and start Gunicorn with Uvicorn workers
+# - Auto-run migrations on startup (required for Render free tier without shell access)
 # - Uses $PORT env var (Railway/Render requirement), defaults to 8000
 # - Worker class: UvicornWorker for async support
 # - Workers: 4 (adjust based on CPU cores: 2-4 x $(NUM_CORES))
 # - Worker connections: 1000 (max concurrent connections per worker)
 # - Access log to stdout for container logging
 # - Timeout: 120s for long-running requests
-CMD ["sh", "-c", "gunicorn fastapi_tdd_docker.main:app \
+CMD ["sh", "-c", "uv run alembic upgrade head && gunicorn fastapi_tdd_docker.main:app \
     --bind 0.0.0.0:${PORT:-8000} \
     --workers 4 \
     --worker-class uvicorn.workers.UvicornWorker \
