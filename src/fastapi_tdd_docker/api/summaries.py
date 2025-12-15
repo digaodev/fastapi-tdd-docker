@@ -30,10 +30,7 @@ async def create_summary(
 
     summary = await crud.create_summary(session, payload)
 
-    return SummaryResponseSchema(
-        id=summary.id,
-        url=summary.url,
-    )
+    return SummaryResponseSchema.model_validate(summary)
 
 
 @router.get("/{summary_id}", response_model=SummaryResponseSchema)
@@ -54,11 +51,9 @@ async def get_summary(summary_id: int, session: SessionDep) -> SummaryResponseSc
 
     if not summary:
         logger.warning(log_message("Summary not found", summary_id=summary_id))
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Summary with id {summary_id} not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Summary not found")
 
-    return SummaryResponseSchema(id=summary.id, url=summary.url)
+    return SummaryResponseSchema.model_validate(summary)
 
 
 @router.get("/", response_model=list[SummaryResponseSchema])
@@ -73,4 +68,4 @@ async def get_all_summaries(session: SessionDep) -> list[SummaryResponseSchema]:
     """
     summaries = await crud.get_all_summaries(session)
 
-    return [SummaryResponseSchema(id=s.id, url=s.url) for s in summaries]
+    return [SummaryResponseSchema.model_validate(s) for s in summaries]
