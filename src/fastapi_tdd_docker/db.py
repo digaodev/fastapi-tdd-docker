@@ -16,6 +16,7 @@ def get_engine() -> AsyncEngine:
     """
     Create and cache the AsyncEngine instance.
     Lazily loads settings at runtime (not at import time).
+    Ensures the URL uses the asyncpg driver for async operations.
     """
     settings = get_settings()
     if settings.database_url is None:
@@ -23,8 +24,18 @@ def get_engine() -> AsyncEngine:
             "DATABASE_URL is not set. "
             "Please set APP_DATABASE_URL or DATABASE_URL environment variable."
         )
+
+    # Convert URL to string and ensure we use asyncpg driver
+    # Render and other platforms provide postgresql:// URLs
+    url = str(settings.database_url)
+    if url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    elif url.startswith("postgres://"):
+        # Some platforms use postgres:// instead of postgresql://
+        url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+
     return create_async_engine(
-        str(settings.database_url),
+        url,
         echo=False,  # flip to True for SQL debugging
     )
 

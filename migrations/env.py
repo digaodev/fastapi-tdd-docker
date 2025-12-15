@@ -27,12 +27,24 @@ def get_url() -> str:
     """
     Get database URL from environment or alembic.ini.
     Priority: APP_DATABASE_URL > DATABASE_URL > alembic.ini
+
+    Ensures the URL uses the asyncpg driver for async operations.
+    Converts postgresql:// to postgresql+asyncpg:// if needed.
     """
     url = os.getenv("APP_DATABASE_URL") or os.getenv("DATABASE_URL")
-    if url:
-        return url
-    # Fallback to alembic.ini
-    return config.get_main_option("sqlalchemy.url", "")
+    if not url:
+        # Fallback to alembic.ini
+        url = config.get_main_option("sqlalchemy.url", "")
+
+    # Ensure we use asyncpg driver for async operations
+    # Render and other platforms provide postgresql:// URLs
+    if url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    elif url.startswith("postgres://"):
+        # Some platforms use postgres:// instead of postgresql://
+        url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+
+    return url
 
 
 # other values from the config, defined by the needs of env.py,
