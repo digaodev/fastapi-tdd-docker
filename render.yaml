@@ -1,0 +1,53 @@
+# Render Infrastructure as Code
+# Documentation: https://render.com/docs/infrastructure-as-code
+
+services:
+  # FastAPI Web Service
+  - type: web
+    name: fastapi-tdd-docker
+    runtime: docker
+    dockerfilePath: ./dockerfile.prod
+    plan: free # Options: free, starter, standard, pro
+    region: oregon # Change to your preferred region
+    branch: master # Deploy from master branch
+
+    # Environment variables
+    envVars:
+      - key: APP_ENVIRONMENT
+        value: prod
+
+      - key: APP_TESTING
+        value: false
+
+      - key: PORT
+        value: 8000
+
+      # Database URL (automatically populated from database)
+      - key: APP_DATABASE_URL
+        fromDatabase:
+          name: fastapi-db
+          property: connectionString
+
+    # Health check
+    healthCheckPath: /ping
+
+    # Auto-deploy on push to main
+    autoDeploy: true
+
+    # Build command (optional, Docker handles this)
+    # buildCommand: echo "Building Docker image..."
+
+    # Pre-deploy command (run migrations)
+    preDeployCommand: uv run alembic upgrade head
+
+databases:
+  # PostgreSQL Database
+  - name: fastapi-db
+    databaseName: fastapi_prod
+    user: fastapi_user
+    plan: free # Free tier: 1 GB storage, 97 connection limit
+    region: oregon # Should match web service region
+
+
+    # Post-create command (optional: seed data)
+    # postgresMajorVersion: 17  # Latest version

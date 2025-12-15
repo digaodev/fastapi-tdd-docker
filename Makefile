@@ -1,4 +1,4 @@
-.PHONY: help dev down logs shell db-shell migrate migrate-create test lint format fix type-check validate setup-hooks check clean install
+.PHONY: help dev down logs shell db-shell migrate migrate-create test lint format fix type-check validate setup-hooks check clean install build-prod test-prod
 
 # Default target when you just run 'make'
 help:
@@ -24,6 +24,10 @@ help:
 	@echo "    make validate         - Run ALL validations (imports + lint + type + test)"
 	@echo "    make check            - Run all checks (lint + type + test)"
 	@echo "    make setup-hooks      - Install pre-commit hooks"
+	@echo ""
+	@echo "  Production:"
+	@echo "    make build-prod       - Build production Docker image"
+	@echo "    make test-prod        - Test production image locally"
 	@echo ""
 	@echo "  Utilities:"
 	@echo "    make install          - Install dependencies"
@@ -96,6 +100,22 @@ setup-hooks:
 	@echo "🔧 Setting up git hooks..."
 	uv run pre-commit install
 	@echo "✅ Pre-commit hooks installed! Commits will now be validated automatically."
+
+# Production
+build-prod:
+	@echo "🏗️  Building production Docker image..."
+	docker build -f dockerfile.prod -t fastapi-tdd-docker:prod .
+	@echo "✅ Production image built: fastapi-tdd-docker:prod"
+
+test-prod:
+	@echo "🧪 Testing production image locally..."
+	@echo "Starting container on http://localhost:8000"
+	@echo "Press Ctrl+C to stop"
+	docker run --rm \
+		-p 8000:8000 \
+		-e APP_DATABASE_URL="postgresql+asyncpg://postgres:postgres@host.docker.internal:5432/web_dev" \
+		-e PORT=8000 \
+		fastapi-tdd-docker:prod
 
 # Utilities
 install:

@@ -1,0 +1,93 @@
+# ============================================================================
+# Production Dockerfile for FastAPI TDD Docker
+# Uses uv for fast dependency installation, multi-stage build for minimal size
+# ============================================================================
+
+# Stage 1: Builder - Install dependencies with uv
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
+
+WORKDIR /app
+
+# Install system dependencies needed for compilation
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        gcc \
+        postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Install dependencies to a virtual environment
+# Use --no-dev to exclude development dependencies
+RUN uv sync --frozen --no-dev --no-install-project
+
+# Copy application source code
+COPY src ./src
+COPY migrations ./migrations
+COPY alembic.ini ./
+
+# Install the project itself
+RUN uv sync --frozen --no-dev
+
+# ============================================================================
+# Stage 2: Runtime - Minimal production image
+# ============================================================================
+FROM python:3.13-slim-bookworm AS runtime
+
+# Set production environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    APP_ENVIRONMENT=prod \
+    APP_TESTING=false \
+    PATH="/app/.venv/bin:$PATH"
+
+WORKDIR /app
+
+# Install only runtime dependencies (PostgreSQL client for health checks)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libpq5 \
+        tini \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user for security
+RUN groupadd -r appuser && useradd -r -g appuser appuser
+
+# Copy virtual environment from builder
+COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
+
+# Copy application code from builder
+COPY --from=builder --chown=appuser:appuser /app/src /app/src
+COPY --from=builder --chown=appuser:appuser /app/migrations /app/migrations
+COPY --from=builder --chown=appuser:appuser /app/alembic.ini /app/alembic.ini
+
+# Switch to non-root user
+USER appuser
+
+# Expose port (default 8000, can be overridden by $PORT for Railway/Render)
+EXPOSE 8000
+
+# Health check endpoint
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:${PORT:-8000}/ping', timeout=2).raise_for_status()" || exit 1
+
+# Use tini as PID 1 for proper signal handling
+ENTRYPOINT ["/usr/bin/tini", "--"]
+
+# Run Gunicorn with Uvicorn workers
+# - Uses $PORT env var (Railway/Render requirement), defaults to 8000
+# - Worker class: UvicornWorker for async support
+# - Workers: 4 (adjust based on CPU cores: 2-4 x $(NUM_CORES))
+# - Worker connections: 1000 (max concurrent connections per worker)
+# - Access log to stdout for container logging
+# - Timeout: 120s for long-running requests
+CMD ["sh", "-c", "gunicorn fastapi_tdd_docker.main:app \
+    --bind 0.0.0.0:${PORT:-8000} \
+    --workers 4 \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --worker-connections 1000 \
+    --access-logfile - \
+    --error-logfile - \
+    --log-level info \
+    --timeout 120"]

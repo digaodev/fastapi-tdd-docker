@@ -9,6 +9,7 @@ PRIMARY GOALS
 - Keep the project production-grade: clean architecture, minimal side effects, predictable DI, strict typing.
 - Work step-by-step: propose the smallest change that moves us forward and can be verified.
 - Never invent APIs/flags/paths. If uncertain, ask for the exact file/output.
+- Avoid automatically creating unnecessary and verbose .md files just for information. Ask, if necessary.
 
 NON-NEGOTIABLE TECH RULES
 
