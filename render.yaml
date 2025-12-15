@@ -38,7 +38,11 @@ services:
     # buildCommand: echo "Building Docker image..."
 
     # Pre-deploy command (run migrations)
-    preDeployCommand: uv run alembic upgrade head
+    # NOTE: preDeployCommand is NOT supported on free tier
+    # Run migrations manually after deployment:
+    # 1. Go to Shell tab in Render dashboard
+    # 2. Run: uv run alembic upgrade head
+    # preDeployCommand: uv run alembic upgrade head
 
 databases:
   # PostgreSQL Database
