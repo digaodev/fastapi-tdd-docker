@@ -3,6 +3,7 @@ name = "fastapi-tdd-docker"
 version = "0.1.0"
 description = "FastAPI project focused on TDD"
 readme = "README.md"
+license = { file = "LICENSE" }
 authors = [
     { name = "Rodrigo RB", email = "rodrigo.rb.dev@gmail.com" }
 ]

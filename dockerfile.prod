@@ -22,7 +22,8 @@ COPY pyproject.toml uv.lock ./
 # Use --no-dev to exclude development dependencies
 RUN uv sync --frozen --no-dev --no-install-project
 
-# Copy application source code
+# Copy application source code and metadata
+COPY README.md LICENSE ./
 COPY src ./src
 COPY migrations ./migrations
 COPY alembic.ini ./
@@ -57,7 +58,8 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 # Copy virtual environment from builder
 COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
 
-# Copy application code from builder
+# Copy application code and metadata from builder
+COPY --from=builder --chown=appuser:appuser /app/README.md /app/LICENSE /app/
 COPY --from=builder --chown=appuser:appuser /app/src /app/src
 COPY --from=builder --chown=appuser:appuser /app/migrations /app/migrations
 COPY --from=builder --chown=appuser:appuser /app/alembic.ini /app/alembic.ini
