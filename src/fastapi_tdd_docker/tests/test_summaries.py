@@ -26,8 +26,8 @@ def test_read_summary(client_with_db):
     response = client_with_db.post("/summaries/", json={"url": "https://foo.bar"})
     summary_id = response.json()["id"]
 
-    # Read it back
-    response = client_with_db.get(f"/summaries/{summary_id}/")
+    # Read it back (no trailing slash for path parameters)
+    response = client_with_db.get(f"/summaries/{summary_id}")
     assert response.status_code == 200
 
     data = response.json()
@@ -38,8 +38,8 @@ def test_read_summary(client_with_db):
 
 
 def test_read_summary_incorrect_id(client_with_db):
-    """Test reading a summary with non-existent ID."""
-    response = client_with_db.get("/summaries/999/")
+    """Test reading a summary with non-existent ID"""
+    response = client_with_db.get("/summaries/999")
     assert response.status_code == 404
     assert response.json()["detail"] == "Summary not found"
 
