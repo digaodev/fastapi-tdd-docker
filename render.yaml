@@ -39,9 +39,9 @@ services:
 
     # Pre-deploy command (NOT supported on Render's free tier)
     # NOTE: Migrations run automatically on startup via dockerfile.prod
-    # The CMD in dockerfile.prod runs: "uv run alembic upgrade head && gunicorn ..."
+    # The CMD in dockerfile.prod runs: "alembic upgrade head && gunicorn ..."
     # This works on all tiers including free!
-    # preDeployCommand: uv run alembic upgrade head  # Only works on paid tiers
+    # preDeployCommand: alembic upgrade head  # Only works on paid tiers
 
 databases:
   # PostgreSQL Database

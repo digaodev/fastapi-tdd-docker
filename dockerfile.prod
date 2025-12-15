@@ -85,7 +85,7 @@ ENTRYPOINT ["/usr/bin/tini", "--"]
 # - Worker connections: 1000 (max concurrent connections per worker)
 # - Access log to stdout for container logging
 # - Timeout: 120s for long-running requests
-CMD ["sh", "-c", "uv run alembic upgrade head && gunicorn fastapi_tdd_docker.main:app \
+CMD ["sh", "-c", "alembic upgrade head && gunicorn fastapi_tdd_docker.main:app \
     --bind 0.0.0.0:${PORT:-8000} \
     --workers 4 \
     --worker-class uvicorn.workers.UvicornWorker \
