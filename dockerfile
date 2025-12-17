@@ -2,7 +2,7 @@
 ############################################
 # Builder: resolve & install dependencies
 ############################################
-FROM python:3.13-slim AS builder
+FROM python:3.14-slim AS builder
 
 # System deps for SSL/curl and clean layer
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -36,7 +36,7 @@ RUN uv sync --frozen --no-dev --python /usr/local/bin/python
 ############################################
 # Final runtime image
 ############################################
-FROM python:3.13-slim AS runtime
+FROM python:3.14-slim AS runtime
 
 # Add tini for proper PID 1 signal handling and curl for healthcheck
 RUN apt-get update && apt-get install -y --no-install-recommends \
