@@ -19,8 +19,9 @@ services:
       - key: APP_TESTING
         value: false
 
-      - key: PORT
-        value: 8000
+      # PORT is automatically set by Render (do not hardcode)
+      # - key: PORT
+      #   value: 8000
 
       # Database URL (automatically populated from database)
       - key: APP_DATABASE_URL

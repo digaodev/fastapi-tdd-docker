@@ -1,5 +1,10 @@
 # FastAPI TDD Docker
 
+![CI/CD](https://github.com/digaodev/fastapi-tdd-docker/actions/workflows/ci.yml/badge.svg)
+[![codecov](https://codecov.io/gh/digaodev/fastapi-tdd-docker/branch/master/graph/badge.svg)](https://codecov.io/gh/digaodev/fastapi-tdd-docker)
+![Python 3.13](https://img.shields.io/badge/python-3.13-blue.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
 A production-ready FastAPI application built with Test-Driven Development principles, async SQLAlchemy/SQLModel, and Docker.
 
 ## ✨ Features
