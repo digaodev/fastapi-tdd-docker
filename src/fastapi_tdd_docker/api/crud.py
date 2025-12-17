@@ -3,7 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from fastapi_tdd_docker.models.schemas import SummaryPayloadSchema
+from fastapi_tdd_docker.models.schemas import SummaryPayloadSchema, SummaryUpdateSchema
 from fastapi_tdd_docker.models.text_summary import TextSummary
 
 
@@ -29,3 +29,31 @@ async def get_all_summaries(session: AsyncSession) -> list[TextSummary]:
     """Get all summaries."""
     result = await session.execute(select(TextSummary))
     return list(result.scalars().all())
+
+
+async def update_summary(
+    session: AsyncSession, summary_id: int, payload: SummaryUpdateSchema
+) -> TextSummary | None:
+    """Update an existing summary."""
+    summary = await get_summary(session, summary_id)
+    if not summary:
+        return None
+
+    # Update fields
+    summary.url = str(payload.url)
+    summary.summary = payload.summary
+
+    await session.commit()
+    await session.refresh(summary)
+    return summary
+
+
+async def delete_summary(session: AsyncSession, summary_id: int) -> TextSummary | None:
+    """Delete a summary by ID."""
+    summary = await get_summary(session, summary_id)
+    if not summary:
+        return None
+
+    await session.delete(summary)
+    await session.commit()
+    return summary

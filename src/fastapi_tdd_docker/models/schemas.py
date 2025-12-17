@@ -7,6 +7,13 @@ class SummaryPayloadSchema(BaseModel):
     url: HttpUrl  # validates it's actually a URL
 
 
+class SummaryUpdateSchema(BaseModel):
+    """Schema for updating a summary."""
+
+    url: HttpUrl
+    summary: str
+
+
 class SummaryResponseSchema(BaseModel):
     id: int
     url: str
