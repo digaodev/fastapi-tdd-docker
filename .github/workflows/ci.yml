@@ -83,7 +83,7 @@ jobs:
           APP_DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/web_test
           APP_DATABASE_TEST_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/web_test
         run: |
-          uv run pytest src/fastapi_tdd_docker/tests/ -v \
+          uv run pytest tests/ -v \
             --cov=src/fastapi_tdd_docker \
             --cov-report=term-missing \
             --cov-report=xml
