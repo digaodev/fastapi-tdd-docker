@@ -16,6 +16,8 @@ A production-ready FastAPI application built with Test-Driven Development princi
 - ✅ **Free tier compatible**: Deploys to Render/Railway/Fly.io without shell access
 - ✅ **Type-safe**: Full mypy strict mode with Pylance
 - ✅ **Fast**: uv for dependencies (10-100x faster than pip)
+- ✅ **AI Summarization**: Modern web scraping + OpenAI integration with pluggable providers
+- ✅ **Background tasks**: Non-blocking async task processing with status tracking
 
 ## Getting Started
 
@@ -68,8 +70,24 @@ make test-prod      # Test production build locally
    ```
 
 4. **Run migrations** (local development)
+
    ```bash
    uv run alembic upgrade head
+   ```
+
+5. **Configure Summarization** (optional)
+
+   For AI-powered summarization, add your OpenAI API key to `.env`:
+
+   ```bash
+   APP_SUMMARIZER_PROVIDER=openai
+   APP_OPENAI_API_KEY=sk-your-api-key-here
+   ```
+
+   Or use mock provider for testing (no external APIs):
+
+   ```bash
+   APP_SUMMARIZER_PROVIDER=mock
    ```
 
 ### Running the Application

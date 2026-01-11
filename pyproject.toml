@@ -13,9 +13,12 @@ dependencies = [
     "asyncpg>=0.30.0",
     "fastapi>=0.119.0",
     "gunicorn>=22.0.0",
+    "httpx>=0.28.0",  # For async HTTP requests in summarizer
+    "openai>=1.59.0",  # For AI-powered summarization
     "pydantic-settings>=2.11.0",
     "sqlalchemy[asyncio]>=2.0.44",
     "sqlmodel>=0.0.27",
+    "trafilatura>=2.0.0",  # Modern web scraping (replaces newspaper3k)
     "uvicorn[standard]>=0.34.0",
 ]
 
@@ -24,7 +27,6 @@ dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.24.0",
     "pytest-cov>=6.0.0",
-    "httpx>=0.28.0",
     "ruff>=0.8.0",
     "mypy>=1.13.0",
     "pre-commit>=4.0.0",

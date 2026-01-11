@@ -8,10 +8,11 @@ from fastapi_tdd_docker.models import SQLModel
 
 
 def get_settings_override() -> Settings:
-    """Override settings to use test database."""
+    """Override settings to use test database and mock provider."""
     return Settings(
         environment="dev",
         testing=True,
+        summarizer_provider="mock",  # Use mock provider in tests
     )
 
 

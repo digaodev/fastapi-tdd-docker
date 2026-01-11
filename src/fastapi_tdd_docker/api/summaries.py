@@ -3,7 +3,7 @@
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Path, status
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Path, status
 
 from fastapi_tdd_docker.api import crud
 from fastapi_tdd_docker.dependencies import SessionDep
@@ -13,6 +13,7 @@ from fastapi_tdd_docker.models.schemas import (
     SummaryResponseSchema,
     SummaryUpdateSchema,
 )
+from fastapi_tdd_docker.summarizer import generate_summary_task
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -20,20 +21,37 @@ logger = logging.getLogger(__name__)
 
 @router.post("/", response_model=SummaryResponseSchema, status_code=status.HTTP_201_CREATED)
 async def create_summary(
-    payload: SummaryPayloadSchema, session: SessionDep
+    payload: SummaryPayloadSchema,
+    session: SessionDep,
+    background_tasks: BackgroundTasks,
 ) -> SummaryResponseSchema:
-    """Create a new text summary.
+    """Create a new text summary and start background summarization.
+
+    The summary is created immediately with status='pending' and an empty summary.
+    A background task is scheduled to fetch the article and generate the summary.
+    The client can poll GET /summaries/{id} to check the status.
 
     Args:
         payload: The summary creation payload containing the URL
         session: Database session (injected)
+        background_tasks: FastAPI background tasks (injected)
 
     Returns:
-        The created summary with ID
+        The created summary with ID and status='pending'
     """
     logger.info(log_message("Creating summary", url=str(payload.url)))
 
     summary = await crud.create_summary(session, payload)
+
+    # Mypy type narrowing: summary.id is guaranteed to exist after database commit
+    assert summary.id is not None, "Summary ID should exist after database commit"
+
+    # Schedule background task to generate summary
+    background_tasks.add_task(generate_summary_task, summary.id, str(payload.url))
+
+    logger.info(
+        log_message("Scheduled summarization task", summary_id=summary.id, url=str(payload.url))
+    )
 
     return SummaryResponseSchema.model_validate(summary)
 

@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 
 
@@ -12,6 +14,8 @@ def test_create_summary(client_with_db):
     assert data["url"] == "https://testdriven.io/"  # Pydantic HttpUrl normalizes URLs
     assert "id" in data
     assert isinstance(data["id"], int)
+    assert data["status"] == "pending"  # Initial status
+    assert data["summary"] == ""  # Empty initially
 
 
 def test_create_summary_invalid_json(client_with_db):
@@ -36,7 +40,8 @@ def test_read_summary(client_with_db):
     data = response.json()
     assert data["id"] == summary_id
     assert data["url"] == "https://foo.bar/"  # HttpUrl normalizes
-    assert data["summary"] == ""  # Empty initially
+    assert "summary" in data  # Summary field exists (may be empty or filled by background task)
+    assert "status" in data  # Status field exists
     assert "created_at" in data
 
 
@@ -255,3 +260,44 @@ def test_update_summary_validation_parametrized(
 
     detail = response.json()["detail"]
     assert expected_detail_check(detail), f"Detail check failed for: {detail}"
+
+
+# ============================================================================
+# Summarization Tests (with mocking for external APIs)
+# ============================================================================
+
+
+# Summarization integration tests are in test_summarizer.py
+# (mocking background tasks in TestClient is tricky due to sync/async bridging)
+
+
+def test_summarization_failure_handling(client_with_db: Any, monkeypatch: Any) -> None:
+    """Test that summarization failures are handled gracefully."""
+    from fastapi_tdd_docker import summarizer
+
+    async def mock_failing_task(summary_id: int, url: str) -> None:
+        """Mock task that simulates a failure."""
+        from fastapi_tdd_docker.db import get_sessionmaker
+        from fastapi_tdd_docker.models.text_summary import TextSummary
+
+        session_factory = get_sessionmaker()
+        async with session_factory() as session:
+            summary = await session.get(TextSummary, summary_id)
+            if summary:
+                summary.status = "failed"
+                summary.summary = "Failed to generate summary: Scraping error"
+                await session.commit()
+
+    monkeypatch.setattr(summarizer, "generate_summary_task", mock_failing_task)
+
+    # Create a summary
+    response = client_with_db.post("/summaries/", json={"url": "https://invalid.example"})
+    assert response.status_code == 201
+
+    summary_id = response.json()["id"]
+
+    # Check that it was marked as failed
+    response = client_with_db.get(f"/summaries/{summary_id}")
+    data = response.json()
+    assert data["status"] == "failed"
+    assert "Failed to generate summary" in data["summary"]

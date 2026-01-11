@@ -21,6 +21,18 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("APP_DATABASE_TEST_URL", "DATABASE_TEST_URL"),
     )
 
+    # Summarization provider: 'openai' or 'mock' (for testing)
+    summarizer_provider: str = Field(
+        default="openai",
+        validation_alias=AliasChoices("APP_SUMMARIZER_PROVIDER", "SUMMARIZER_PROVIDER"),
+    )
+
+    # OpenAI API key (optional, only needed if using OpenAI provider)
+    openai_api_key: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("APP_OPENAI_API_KEY", "OPENAI_API_KEY"),
+    )
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_prefix="APP_",  # all app vars should start with APP_

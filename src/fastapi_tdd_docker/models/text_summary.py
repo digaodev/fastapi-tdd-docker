@@ -8,6 +8,7 @@ class TextSummary(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     url: str
     summary: str
+    status: str = Field(default="pending")  # pending, processing, completed, failed
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
         sa_column=Column(DateTime(timezone=True), nullable=False),
