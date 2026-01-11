@@ -15,8 +15,12 @@ help:
 	@echo "    make migrate          - Run database migrations"
 	@echo "    make migrate-create   - Create new migration (auto-generate)"
 	@echo ""
+	@echo "  Testing:"
+	@echo "    make test             - Run all tests with coverage"
+	@echo "    make test-unit        - Run only unit tests (fast, no DB)"
+	@echo "    make test-integration - Run only integration tests (requires DB)"
+	@echo ""
 	@echo "  Code Quality:"
-	@echo "    make test             - Run tests with coverage"
 	@echo "    make lint             - Run linter (ruff)"
 	@echo "    make format           - Format code (ruff)"
 	@echo "    make fix              - Auto-fix linting + format code"
@@ -65,9 +69,17 @@ migrate-local-create:
 	@read -p "Enter migration message: " msg; \
 	uv run alembic revision --autogenerate -m "$$msg"
 
-# Code quality
+# Testing
 test:
 	uv run pytest -v
+
+test-unit:
+	@echo "🧪 Running unit tests (no database required)..."
+	uv run pytest -m unit -v
+
+test-integration:
+	@echo "🧪 Running integration tests (requires database)..."
+	uv run pytest -m integration -v
 
 test-cov:
 	uv run pytest -v --cov=src/fastapi_tdd_docker --cov-report=term-missing --cov-report=html

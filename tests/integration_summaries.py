@@ -1,10 +1,16 @@
+"""Integration tests for /summaries endpoints.
+
+These tests require a real database connection and test the full API lifecycle.
+"""
+
 from typing import Any
 
 import pytest
 
 
+@pytest.mark.integration
 def test_create_summary(client_with_db):
-    """Test creating a new summary."""
+    """Integration test: Create a new summary via POST /summaries/."""
     payload = {"url": "https://testdriven.io"}
 
     response = client_with_db.post("/summaries/", json=payload)
@@ -18,6 +24,7 @@ def test_create_summary(client_with_db):
     assert data["summary"] == ""  # Empty initially
 
 
+@pytest.mark.integration
 def test_create_summary_invalid_json(client_with_db):
     """Test creating summary with invalid payload."""
     response = client_with_db.post("/summaries/", json={})
@@ -27,6 +34,7 @@ def test_create_summary_invalid_json(client_with_db):
     assert "detail" in data
 
 
+@pytest.mark.integration
 def test_read_summary(client_with_db):
     """Test reading a single summary by ID."""
     # Create a summary first
@@ -45,6 +53,7 @@ def test_read_summary(client_with_db):
     assert "created_at" in data
 
 
+@pytest.mark.integration
 def test_read_summary_incorrect_id(client_with_db):
     """Test reading a summary with non-existent ID"""
     response = client_with_db.get("/summaries/999")
@@ -52,6 +61,7 @@ def test_read_summary_incorrect_id(client_with_db):
     assert response.json()["detail"] == "Summary not found"
 
 
+@pytest.mark.integration
 def test_read_all_summaries(client_with_db):
     """Test reading all summaries."""
     # Create a summary
@@ -66,6 +76,7 @@ def test_read_all_summaries(client_with_db):
     assert len(list(filter(lambda d: d["id"] == summary_id, response_list))) == 1
 
 
+@pytest.mark.integration
 def test_read_summary_invalid_id(client_with_db):
     """Test reading a summary with invalid ID (id <= 0)."""
     response = client_with_db.get("/summaries/0")
@@ -80,6 +91,7 @@ def test_read_summary_invalid_id(client_with_db):
 # ============================================================================
 
 
+@pytest.mark.integration
 def test_delete_summary(client_with_db):
     """Test deleting a summary."""
     # Create a summary
@@ -99,6 +111,7 @@ def test_delete_summary(client_with_db):
     assert response.status_code == 404
 
 
+@pytest.mark.integration
 def test_delete_summary_not_found(client_with_db):
     """Test deleting a non-existent summary."""
     response = client_with_db.delete("/summaries/999")
@@ -106,6 +119,7 @@ def test_delete_summary_not_found(client_with_db):
     assert response.json()["detail"] == "Summary not found"
 
 
+@pytest.mark.integration
 def test_delete_summary_invalid_id(client_with_db):
     """Test deleting with invalid ID (id <= 0)."""
     response = client_with_db.delete("/summaries/0")
@@ -120,6 +134,7 @@ def test_delete_summary_invalid_id(client_with_db):
 # ============================================================================
 
 
+@pytest.mark.integration
 def test_update_summary(client_with_db):
     """Test updating a summary."""
     # Create a summary
@@ -138,6 +153,7 @@ def test_update_summary(client_with_db):
     assert "created_at" in data
 
 
+@pytest.mark.integration
 def test_update_summary_not_found(client_with_db):
     """Test updating a non-existent summary."""
     update_payload = {"url": "https://foo.bar", "summary": "updated"}
@@ -146,6 +162,7 @@ def test_update_summary_not_found(client_with_db):
     assert response.json()["detail"] == "Summary not found"
 
 
+@pytest.mark.integration
 def test_update_summary_invalid_id(client_with_db):
     """Test updating with invalid ID (id <= 0)."""
     update_payload = {"url": "https://foo.bar", "summary": "updated"}
@@ -156,6 +173,7 @@ def test_update_summary_invalid_id(client_with_db):
     assert detail[0]["loc"] == ["path", "summary_id"]
 
 
+@pytest.mark.integration
 def test_update_summary_invalid_url(client_with_db):
     """Test updating with invalid URL."""
     # Create a summary
@@ -170,6 +188,7 @@ def test_update_summary_invalid_url(client_with_db):
     assert "url" in detail[0]["msg"].lower() or "url" in detail[0]["type"].lower()
 
 
+@pytest.mark.integration
 def test_update_summary_missing_fields(client_with_db):
     """Test updating with missing required fields."""
     # Create a summary
@@ -242,6 +261,7 @@ def test_update_summary_missing_fields(client_with_db):
         "missing_both",
     ],
 )
+@pytest.mark.integration
 def test_update_summary_validation_parametrized(
     client_with_db, summary_id, payload, expected_status, expected_detail_check
 ):
@@ -267,10 +287,14 @@ def test_update_summary_validation_parametrized(
 # ============================================================================
 
 
-# Summarization integration tests are in test_summarizer.py
-# (mocking background tasks in TestClient is tricky due to sync/async bridging)
+# ============================================================================
+# Summarization Tests (with mocking for background tasks)
+# ============================================================================
+# Note: Background tasks in TestClient run outside dependency injection,
+# so we mock the entire task function for predictable testing.
 
 
+@pytest.mark.integration
 def test_summarization_failure_handling(client_with_db: Any, monkeypatch: Any) -> None:
     """Test that summarization failures are handled gracefully."""
     from fastapi_tdd_docker import summarizer

@@ -41,9 +41,13 @@ make setup-hooks    # Setup pre-commit hooks
 # Development
 make dev            # Start development environment (Docker)
 
-# Code quality (use these frequently!)
+# Testing (use these frequently!)
+make test           # Run all tests
+make test-unit      # Run only unit tests (fast, no DB)
+make test-integration # Run only integration tests (requires DB)
+
+# Code quality
 make fix            # Auto-fix linting + format code
-make test           # Run tests
 make validate       # Run all validations (imports + lint + type + test)
 
 # Production
@@ -186,6 +190,42 @@ make test-prod
 - **Health checks**: Built-in `/ping` and `/health` endpoints
 
 See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for platform-specific deployment guides.
+
+---
+
+## Testing
+
+The project uses a clear separation between unit and integration tests:
+
+```bash
+# Run all tests (36 tests, ~4s)
+make test
+
+# Run only unit tests (11 tests, ~0.4s) - no database required
+make test-unit
+
+# Run only integration tests (25 tests, ~3.3s) - requires database
+make test-integration
+
+# With pytest directly
+pytest tests/                  # All tests
+pytest tests/unit_*.py        # Unit tests only
+pytest tests/integration_*.py  # Integration tests only
+pytest -m unit                # Tests marked with @pytest.mark.unit
+pytest -m integration         # Tests marked with @pytest.mark.integration
+```
+
+### Test Organization
+
+```
+tests/
+├── __init__.py                    # Test suite documentation
+├── conftest.py                    # Shared fixtures
+├── unit_summarizer.py             # Unit tests (all mocked, fast)
+├── integration_ping.py            # Integration tests (requires API)
+├── integration_healthcheck.py     # Integration tests (requires DB)
+└── integration_summaries.py       # Integration tests (full CRUD)
+```
 
 ---
 

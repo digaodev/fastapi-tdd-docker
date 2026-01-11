@@ -1,8 +1,8 @@
-"""Tests for the summarizer module.
+"""Unit tests for the summarizer module.
 
-These are unit tests for the summarizer functionality, testing:
-- Web scraping with trafilatura
-- Provider abstraction
+These are pure unit tests with all external dependencies mocked:
+- Web scraping with trafilatura (HTTP mocked)
+- Provider abstraction (no external API calls)
 - Error handling
 - Configuration
 """
@@ -16,9 +16,10 @@ import pytest
 # ============================================================================
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_fetch_article_text_success(monkeypatch):
-    """Test successful article text extraction."""
+    """Unit test: Mock HTTP response and test text extraction logic."""
     import httpx
 
     from fastapi_tdd_docker import summarizer
@@ -62,9 +63,10 @@ async def test_fetch_article_text_success(monkeypatch):
     # trafilatura should extract at least the article content
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_fetch_article_text_http_error(monkeypatch):
-    """Test handling of HTTP errors during fetching."""
+    """Unit test: Verify HTTP error handling."""
     import httpx
 
     from fastapi_tdd_docker import summarizer
@@ -86,9 +88,10 @@ async def test_fetch_article_text_http_error(monkeypatch):
         await summarizer.fetch_article_text("https://example.com")
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_fetch_article_text_insufficient_content(monkeypatch):
-    """Test handling of pages with insufficient content."""
+    """Unit test: Verify handling of pages with too little content."""
     import httpx
 
     from fastapi_tdd_docker import summarizer
@@ -122,9 +125,10 @@ async def test_fetch_article_text_insufficient_content(monkeypatch):
 # ============================================================================
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_mock_summarizer():
-    """Test the mock summarizer (for testing environments)."""
+    """Unit test: Verify mock summarizer returns expected format."""
     from fastapi_tdd_docker.summarizer import MockSummarizer
 
     summarizer = MockSummarizer()
@@ -135,9 +139,10 @@ async def test_mock_summarizer():
     assert "mock" in summary.lower()
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_openai_summarizer_requires_api_key():
-    """Test that OpenAI summarizer requires an API key."""
+    """Unit test: Verify OpenAI summarizer can be instantiated with API key."""
     from fastapi_tdd_docker.summarizer import OpenAISummarizer
 
     # Should work with any string (validation happens at API call time)
@@ -145,8 +150,9 @@ async def test_openai_summarizer_requires_api_key():
     assert summarizer is not None
 
 
+@pytest.mark.unit
 def test_get_summarizer_with_mock_provider(monkeypatch):
-    """Test getting the mock summarizer via factory."""
+    """Unit test: Verify factory returns mock provider."""
     from fastapi_tdd_docker.config import Settings
     from fastapi_tdd_docker.summarizer import MockSummarizer, get_summarizer
 
@@ -159,8 +165,9 @@ def test_get_summarizer_with_mock_provider(monkeypatch):
     assert isinstance(summarizer, MockSummarizer)
 
 
+@pytest.mark.unit
 def test_get_summarizer_with_openai_provider(monkeypatch):
-    """Test getting the OpenAI summarizer via factory."""
+    """Unit test: Verify factory returns OpenAI provider."""
     from fastapi_tdd_docker.config import Settings
     from fastapi_tdd_docker.summarizer import OpenAISummarizer, get_summarizer
 
@@ -174,8 +181,9 @@ def test_get_summarizer_with_openai_provider(monkeypatch):
     assert isinstance(summarizer, OpenAISummarizer)
 
 
+@pytest.mark.unit
 def test_get_summarizer_openai_without_api_key(monkeypatch):
-    """Test that OpenAI provider fails without API key."""
+    """Unit test: Verify OpenAI provider fails without API key."""
     from fastapi_tdd_docker.config import Settings
     from fastapi_tdd_docker.summarizer import get_summarizer
 
@@ -190,8 +198,9 @@ def test_get_summarizer_openai_without_api_key(monkeypatch):
         get_summarizer(settings)
 
 
+@pytest.mark.unit
 def test_get_summarizer_invalid_provider(monkeypatch):
-    """Test that invalid provider raises error."""
+    """Unit test: Verify factory rejects invalid provider."""
     from fastapi_tdd_docker.config import Settings
     from fastapi_tdd_docker.summarizer import get_summarizer
 
@@ -205,61 +214,78 @@ def test_get_summarizer_invalid_provider(monkeypatch):
 
 
 # ============================================================================
-# Integration Tests (Background Task)
+# Background Task Tests (with all dependencies mocked)
 # ============================================================================
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
-async def test_generate_summary_task_with_mock_provider(monkeypatch: Any) -> None:
-    """Test the full background task flow with mock provider."""
+async def test_generate_summary_task_can_be_called(monkeypatch: Any) -> None:
+    """Unit test: Verify background task can execute without crashing.
+
+    This is a pure unit test that mocks all database and external dependencies.
+    Full integration testing of the background task is in integration_summaries.py.
+    """
     from fastapi_tdd_docker import summarizer
-    from fastapi_tdd_docker.config import get_settings
-    from fastapi_tdd_docker.db import get_sessionmaker
-    from fastapi_tdd_docker.models.text_summary import TextSummary
 
     # Set mock provider
     monkeypatch.setenv("APP_SUMMARIZER_PROVIDER", "mock")
 
-    # Clear settings cache so monkeypatched env vars are picked up
-    get_settings.cache_clear()
+    # Track if the summarization was attempted
+    summarization_called = False
 
-    # Mock fetch_article_text to avoid real HTTP requests
+    # Mock get_sessionmaker to return a mock session factory
+    class MockSummary:
+        def __init__(self) -> None:
+            self.id = 1
+            self.url = "https://example.com"
+            self.summary = ""
+            self.status = "pending"
+
+    class MockSession:
+        async def get(self, model: Any, id: int) -> MockSummary:
+            return MockSummary()
+
+        async def commit(self) -> None:
+            pass
+
+        async def __aenter__(self) -> "MockSession":
+            return self
+
+        async def __aexit__(self, *args: Any) -> None:
+            pass
+
+    class MockSessionFactory:
+        def __call__(self):
+            return MockSession()
+
+    # Mock fetch_article_text to return content
     async def mock_fetch(url: str, timeout: int = 30) -> str:
-        return "This is a test article with enough content. " * 20  # 100+ chars
+        return "This is a test article with enough content. " * 20
 
+    # Mock get_summarizer to track calls
+    def mock_get_summarizer(settings=None):
+        nonlocal summarization_called
+        summarization_called = True
+        return summarizer.MockSummarizer()
+
+    # Apply mocks
     monkeypatch.setattr(summarizer, "fetch_article_text", mock_fetch)
+    monkeypatch.setattr(summarizer, "get_summarizer", mock_get_summarizer)
+    mock_session_factory = MockSessionFactory()
+    monkeypatch.setattr(summarizer, "get_sessionmaker", lambda: mock_session_factory)
 
-    # Create a test summary in the database
-    session_factory = get_sessionmaker()
-    async with session_factory() as session:
-        test_summary = TextSummary(
-            url="https://example.com",
-            summary="",
-            status="pending",
-        )
-        session.add(test_summary)
-        await session.commit()
-        await session.refresh(test_summary)
-        summary_id = test_summary.id
+    # Run the background task (should not raise)
+    await summarizer.generate_summary_task(1, "https://example.com")
 
-    # Mypy type narrowing: summary_id is guaranteed to exist after commit/refresh
-    assert summary_id is not None
-
-    # Run the background task
-    await summarizer.generate_summary_task(summary_id, "https://example.com")
-
-    # Verify the summary was updated
-    async with session_factory() as session:
-        updated_summary = await session.get(TextSummary, summary_id)
-        assert updated_summary is not None
-        assert updated_summary.status == "completed"
-        assert len(updated_summary.summary) > 0
-        assert "mock" in updated_summary.summary.lower()
+    # Verify the summarizer was invoked
+    assert summarization_called, "Summarizer should have been called"
 
 
+@pytest.mark.unit
 @pytest.mark.asyncio
 async def test_scraping_error_handling() -> None:
-    """Test that ScrapingError is properly defined and can be raised."""
+    """Unit test: Verify ScrapingError exception can be raised and caught."""
     from fastapi_tdd_docker.summarizer import ScrapingError
 
     # Test that we can raise and catch ScrapingError
@@ -267,4 +293,4 @@ async def test_scraping_error_handling() -> None:
         raise ScrapingError("Test error")
 
     # Error handling in generate_summary_task is tested implicitly
-    # in the integration test above (it doesn't crash on errors)
+    # in the integration test (it doesn't crash on errors)

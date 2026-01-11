@@ -84,8 +84,13 @@ disable_error_code = ["arg-type"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+python_files = ["unit_*.py", "integration_*.py", "test_*.py"]  # Allow unit_*/integration_* pattern
 asyncio_mode = "auto"
 addopts = "-v --cov=src/fastapi_tdd_docker --cov-report=term-missing --cov-report=html"
+markers = [
+    "unit: Unit tests (fast, all dependencies mocked, no I/O)",
+    "integration: Integration tests (require database, slower)",
+]
 
 [tool.coverage.run]
 source = ["src"]

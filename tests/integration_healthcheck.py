@@ -1,8 +1,11 @@
-"""Tests for health check endpoint."""
+"""Integration tests for /health endpoint."""
+
+import pytest
 
 
+@pytest.mark.integration
 def test_health_check_success(client_with_db):
-    """Test health check with working database connection."""
+    """Integration test: Health check with working database connection."""
     response = client_with_db.get("/health")
 
     assert response.status_code == 200
@@ -12,8 +15,9 @@ def test_health_check_success(client_with_db):
     assert data["environment"] == "dev"
 
 
+@pytest.mark.integration
 def test_health_check_no_db(client):
-    """Test health check without database (should fail gracefully)."""
+    """Integration test: Health check without database (should fail gracefully)."""
     # This test uses 'client' fixture which has no DB dependency override
     # So it will try to connect to the actual database and may fail
     response = client.get("/health")
