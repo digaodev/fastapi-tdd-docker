@@ -34,7 +34,7 @@ RUN uv sync --frozen --no-dev
 # ============================================================================
 # Stage 2: Runtime - Minimal production image
 # ============================================================================
-FROM python:3.14-slim-bookworm AS runtime
+FROM python:3.13-slim-bookworm AS runtime
 
 # Set production environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -85,7 +85,7 @@ ENTRYPOINT ["/usr/bin/tini", "--"]
 # - Worker connections: 1000 (max concurrent connections per worker)
 # - Access log to stdout for container logging
 # - Timeout: 120s for long-running requests
-CMD ["sh", "-c", "alembic upgrade head && gunicorn fastapi_tdd_docker.main:app \
+CMD ["sh", "-c", "python -m alembic upgrade head && python -m gunicorn fastapi_tdd_docker.main:app \
     --bind 0.0.0.0:${PORT:-8000} \
     --workers 4 \
     --worker-class uvicorn.workers.UvicornWorker \
