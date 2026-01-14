@@ -34,7 +34,7 @@ RUN uv sync --frozen --no-dev
 # ============================================================================
 # Stage 2: Runtime - Minimal production image
 # ============================================================================
-FROM python:3.13-slim-bookworm AS runtime
+FROM python:3.14-slim-bookworm AS runtime
 
 # Set production environment variables
 ENV PYTHONUNBUFFERED=1 \
