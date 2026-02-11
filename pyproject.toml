@@ -37,7 +37,7 @@ dev = [
 fastapi-tdd-docker = "fastapi_tdd_docker.main:main"
 
 [build-system]
-requires = ["uv_build>=0.8.22,<0.10.0"]
+requires = ["uv_build>=0.8.22,<0.11.0"]
 build-backend = "uv_build"
 
 [tool.ruff]
